@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrepFlow | Professional Study OS</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- HTML2PDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        /* Premium CSS Variables */
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #8b5cf6;
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.025);
+            --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Deep Dark Mode Theme */
+        [data-theme="dark"] {
+            --primary: #60a5fa;
+            --primary-hover: #3b82f6;
+            --bg-color: #09090b;
+            --surface: #18181b;
+            --text-main: #f8fafc;
+            --text-muted: #a1a1aa;
+            --border: #27272a;
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.3);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.5);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 20px; transition: var(--transition); }
+        .container { max-width: 1150px; margin: 0 auto; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* Top Navigation & Header */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .streak-badge { background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .top-controls { display: flex; gap: 10px; }
+        .icon-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: grid; place-items: center; transition: var(--transition); font-size: 1.1rem; }
+        .icon-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 5px; }
+        header span.highlight { background: linear-gradient(to right, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        header p { color: var(--text-muted); font-size: 1rem; }
+
+        /* Exams Slider */
+        .exam-container { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 25px; }
+        .exam-card { min-width: 200px; background: var(--surface); border: 1px solid var(--border); padding: 15px; border-radius: var(--radius-md); text-align: center; position: relative; box-shadow: var(--shadow-sm); transition: var(--transition); }
+        .exam-card:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: var(--shadow-md); }
+        .exam-card h4 { font-size: 1rem; color: var(--text-muted); }
+        .exam-card .days { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin: 5px 0; }
+        .exam-card .del-exam { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; opacity: 0; transition: 0.2s; }
+        .exam-card:hover .del-exam { opacity: 1; }
+        .exam-card .del-exam:hover { color: var(--danger); }
+        .exam-add-btn { min-width: 200px; background: transparent; border: 1.5px dashed var(--border); color: var(--text-muted); border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .exam-add-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(59, 130, 246, 0.05); }
+
+        /* Tabs Navigation */
+        .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 30px; flex-wrap: wrap; background: var(--surface); padding: 8px; border-radius: 100px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); width: max-content; margin-left: auto; margin-right: auto; }
+        .tab-btn { background: transparent; border: none; padding: 10px 20px; border-radius: 100px; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: var(--text-muted); transition: var(--transition); display: flex; gap: 8px; align-items: center; }
+        .tab-btn:hover { color: var(--text-main); }
+        .tab-btn.active { background: var(--text-main); color: var(--bg-color); box-shadow: var(--shadow-sm); }
+        [data-theme="dark"] .tab-btn.active { background: var(--primary); color: white; }
+
+        /* Content Area */
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .header-actions { display: flex; gap: 10px; }
+
+        /* Buttons & Inputs */
+        button { cursor: pointer; border: none; outline: none; border-radius: 8px; font-weight: 600; transition: var(--transition); display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; padding: 10px 18px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-glow); transform: translateY(-2px); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid transparent; }
+        .btn-danger:hover { background: var(--danger); color: white; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+        .btn-icon { background: transparent; color: var(--text-muted); padding: 5px; font-size: 1.1rem; }
+        .btn-icon:hover { color: var(--primary); }
+
+        input, select, textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; background: var(--surface); color: var(--text-main); transition: var(--transition); }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+        /* --- MULTIPLE SCRATCHPADS --- */
+        .scratchpad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .scratchpad-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 15px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--shadow-sm); transition: var(--transition); }
+        .scratchpad-card:focus-within { border-color: var(--primary); box-shadow: var(--shadow-md); }
+        .sp-title { font-weight: 700; border: none; padding: 5px; background: transparent; font-size: 1.1rem; border-bottom: 1px solid transparent; }
+        .sp-title:focus { border-bottom: 1px solid var(--primary); box-shadow: none; }
+        .sp-content { resize: vertical; min-height: 150px; border: none; padding: 5px; background: transparent; flex-grow: 1; }
+        .sp-content:focus { box-shadow: none; }
+        .sp-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 10px; }
+
+        /* --- SYLLABUS KANBAN BOARD --- */
+        .kanban-board { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 10px; }
+        .kanban-column { flex: 1; min-width: 280px; background: var(--surface); border-radius: var(--radius-md); padding: 15px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .kanban-header { font-weight: 700; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
+        .kb-todo .kanban-header { color: var(--danger); border-color: var(--danger); }
+        .kb-doing .kanban-header { color: var(--warning); border-color: var(--warning); }
+        .kb-done .kanban-header { color: var(--success); border-color: var(--success); }
+        .kanban-items { flex-grow: 1; min-height: 200px; display: flex; flex-direction: column; gap: 10px; }
+        .kanban-card { background: var(--bg-color); border: 1px solid var(--border); padding: 12px; border-radius: 8px; cursor: grab; transition: transform 0.2s; position: relative; }
+        .kanban-card:active { cursor: grabbing; transform: scale(0.98); }
+        .kanban-card .kb-tag { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
+        .kanban-card .kb-del { position: absolute; top: 10px; right: 10px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; border: none; background: transparent; }
+        .kanban-card .kb-del:hover { color: var(--danger); }
+
+        /* --- STUDY MANAGER TABLE --- */
+        .add-row-form { display: grid; grid-template-columns: 1fr 1fr 2fr 1fr auto; gap: 10px; margin-bottom: 20px; background: var(--surface); padding: 15px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+        .table-responsive { overflow-x: auto; background: var(--surface); border-radius: var(--radius-md); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: rgba(0,0,0,0.02); font-weight: 600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        [data-theme="dark"] th { background: rgba(255,255,255,0.02); }
+        tbody tr:hover { background: var(--bg-color); }
+
+        /* --- TASKS --- */
+        .progress-bar-bg { width: 100%; height: 6px; background: var(--border); border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; background: var(--success); width: 0%; transition: 0.5s; }
+        .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 10px; border-radius: var(--radius-md); transition: var(--transition); border-left: 4px solid transparent; }
+        .todo-item:hover { border-color: var(--primary); transform: translateX(3px); }
+        .todo-item.priority { border-left-color: var(--warning); }
+        .todo-item.completed { opacity: 0.5; }
+        .todo-item.completed span { text-decoration: line-through; }
+
+        /* --- FLASHCARDS --- */
+        .fc-container { perspective: 1000px; width: 100%; max-width: 500px; height: 300px; margin: 0 auto 20px; }
+        .fc-card { width: 100%; height: 100%; position: relative; transition: transform 0.6s; transform-style: preserve-3d; cursor: pointer; }
+        .fc-card.flipped { transform: rotateY(180deg); }
+        .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-md); text-align: center; font-size: 1.3rem; font-weight: 600; }
+        .fc-back { background: var(--text-main); color: var(--bg-color); transform: rotateY(180deg); }
+        [data-theme="dark"] .fc-back { background: var(--primary); color: white; }
+
+        /* --- TIMER & ANALYTICS --- */
+        .timer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .timer-display { font-size: 5rem; font-weight: 800; text-align: center; color: var(--text-main); font-variant-numeric: tabular-nums; margin-bottom: 15px; }
+        .chart-wrap { display: flex; align-items: flex-end; justify-content: space-between; height: 180px; padding-top: 20px; border-bottom: 1px solid var(--border); gap: 5px; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+        .bar-fill { width: 100%; max-width: 30px; background: var(--primary); border-radius: 4px 4px 0 0; transition: 1s; position: relative; }
+        .bar-fill:hover { filter: brightness(1.2); }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--surface); padding: 30px; border-radius: var(--radius-lg); width: 90%; max-width: 400px; box-shadow: var(--shadow-lg); border: 1px solid var(--border); }
+
+        @media (max-width: 768px) {
+            .timer-grid, .add-row-form { grid-template-columns: 1fr; }
+            .kanban-board { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<script>if (localStorage.getItem('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');</script>
+
+<div class="container">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="streak-badge" id="streakBadge"><i class="fa-solid fa-fire"></i> <span>0 Days Streak</span></div>
+        <div class="top-controls">
+            <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
+            <button class="icon-btn" onclick="openModal('settingsModal')" title="Settings"><i class="fa-solid fa-gear"></i></button>
+        </div>
+    </div>
+
+    <header>
+        <h1>Prep<span class="highlight">Flow</span></h1>
+        <p>Your Professional Study OS & Productivity Workspace</p>
+    </header>
+
+    <!-- Multiple Exams Slider -->
+    <div class="exam-container" id="examContainer"></div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('notes')"><i class="fa-solid fa-pen-nib"></i> Scratchpads</button>
+        <button class="tab-btn" onclick="openTab('kanban')"><i class="fa-solid fa-map"></i> Syllabus Board</button>
+        <button class="tab-btn" onclick="openTab('study')"><i class="fa-solid fa-table"></i> Resources</button>
+        <button class="tab-btn" onclick="openTab('todo')"><i class="fa-solid fa-list-check"></i> Tasks</button>
+        <button class="tab-btn" onclick="openTab('flashcards')"><i class="fa-solid fa-clone"></i> Flashcards</button>
+        <button class="tab-btn" onclick="openTab('timer')"><i class="fa-solid fa-chart-pie"></i> Focus</button>
+    </div>
+
+    <!-- TAB 1: MULTIPLE SCRATCHPADS -->
+    <div id="notes" class="tab-content active">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-book-open"></i> My Scratchpads</h3>
+            <div class="header-actions">
+                <button class="btn-outline" onclick="addScratchpad()"><i class="fa-solid fa-plus"></i> New Note</button>
+                <button class="btn-outline" onclick="exportNotesPDF()"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                <button class="btn-outline" onclick="exportNotesTXT()"><i class="fa-solid fa-file-lines"></i> TXT</button>
+                <button class="btn-danger" onclick="eraseAll('notes')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="scratchpad-grid" id="scratchpadGrid">
+            <!-- Dynamic Notes Injected Here -->
+        </div>
+        <!-- Hidden div for PDF export -->
+        <div id="pdfExportContainer" style="display: none; padding: 20px; background: white; color: black;"></div>
+    </div>
+
+    <!-- TAB 2: SYLLABUS KANBAN BOARD -->
+    <div id="kanban" class="tab-content">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-map"></i> Syllabus Tracker</h3>
+            <div class="header-actions">
+                <button class="btn-danger" onclick="eraseAll('kanban')"><i class="fa-solid fa-trash"></i> Erase Board</button>
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="kbTopic" placeholder="Topic Name (e.g. Thermodynamics)">
+            <input type="text" id="kbSubject" placeholder="Subject Tag (e.g. Physics)" style="width: 200px;">
+            <button class="btn-primary" onclick="addKanbanItem()"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        
+        <div class="kanban-board">
+            <div class="kanban-column kb-todo" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)">
+                <div class="kanban-header">To Study <span id="kb-todo-count">0</span></div>
+                <div class="kanban-items" id="col-todo"></div>
+            </div>
+            <div class="kanban-column kb-doing" ondrop="drop(event, 'doing')" ondragover="allowDrop(event)">
+                <div class="kanban-header">Revising <span id="kb-doing-count">0</span></div>
+                <div class="kanban-items" id="col-doing"></div>
+            </div>
+            <div class="kanban-column kb-done" ondrop="drop(event, 'done')" ondragover="allowDrop(event)">
+                <div class="kanban-header">Mastered <span id="kb-done-count">0</span></div>
+                <div class="kanban-items" id="col-done"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: STUDY MANAGER -->
+    <div id="study" class="tab-content">
+        <div class="section-header">
+            <select id="subjectFilter" style="max-width:200px;"><option value="All">All Subjects</option></select>
+            <div class="header-actions">
+                <button class="btn-outline" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+                <button class="btn-danger" onclick="eraseAll('study')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>
+        <form class="add-row-form" id="studyForm">
+            <input type="text" id="subjInput" placeholder="Subject" required>
+            <input type="text" id="topicInput" placeholder="Topic" required>
+            <input type="text" id="descInput" placeholder="Description" required>
+            <input type="url" id="linkInput" placeholder="URL Link">
+            <button type="submit" class="btn-primary"><i class="fa-solid fa-plus"></i></button>
+        </form>
+        <div class="table-responsive">
+            <table>
+                <thead><tr><th>Subject</th><th>Topic</th><th>Description</th><th>Link</th><th>Act</th></tr></thead>
+                <tbody id="studyTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- TAB 4: TASKS -->
+    <div id="todo" class="tab-content">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-list-check"></i> Action Items</h3>
+            <button class="btn-danger" onclick="eraseAll('todo')"><i class="fa-solid fa-trash"></i> Erase</button>
+        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="todoProgress"></div></div>
+        <div style="display:flex; gap:10px; margin-bottom: 20px;">
+            <input type="text" id="todoInput" placeholder="Add task (Star to prioritize)">
+            <button class="btn-primary" onclick="addTodo()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div id="todoList"></div>
+    </div>
+
+    <!-- TAB 5: FLASHCARDS -->
+    <div id="flashcards" class="tab-content">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-brain"></i> Active Recall</h3>
+            <button class="btn-danger" onclick="eraseAll('flashcards')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom: 30px;">
+            <input type="text" id="fcQuestion" placeholder="Question">
+            <input type="text" id="fcAnswer" placeholder="Answer">
+            <button class="btn-primary" onclick="addFlashcard()"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        
+        <div id="fcDisplayArea" style="display: none; text-align:center;">
+            <div class="fc-container" onclick="flipCard()">
+                <div class="fc-card" id="activeFlashcard">
+                    <div class="fc-face fc-front"><span style="font-size:0.8rem; color:var(--text-muted); position:absolute; top:15px;">QUESTION</span><p id="fcFrontText"></p></div>
+                    <div class="fc-face fc-back"><span style="font-size:0.8rem; opacity:0.7; position:absolute; top:15px;">ANSWER</span><p id="fcBackText"></p></div>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:center; align-items:center; gap:20px;">
+                <button class="icon-btn" onclick="prevCard()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span id="fcCounter" style="font-weight:600;">1 / 1</span>
+                <button class="icon-btn" onclick="nextCard()"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+        <div id="fcEmpty" style="text-align:center; padding: 40px; color:var(--text-muted);">Deck is empty. Add cards to start.</div>
+    </div>
+
+    <!-- TAB 6: TIMER & ANALYTICS -->
+    <div id="timer" class="tab-content">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-chart-pie"></i> Focus & Analytics</h3>
+            <button class="btn-danger" onclick="eraseAll('analytics')"><i class="fa-solid fa-trash"></i> Reset Data</button>
+        </div>
+        <div class="timer-grid">
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:30px; text-align:center;">
+                <div class="timer-display" id="timeDisplay">25:00</div>
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                    <button class="btn-primary" id="startBtn" onclick="toggleTimer()" style="width:120px; justify-content:center;">Start</button>
+                    <button class="btn-outline" onclick="stopAndLog()">Log Data</button>
+                </div>
+                <div style="display:flex; justify-content:center; gap:10px;">
+                    <button class="btn-icon" onclick="setTimer(15)">15m</button>
+                    <button class="btn-icon" onclick="setTimer(25)">25m</button>
+                    <button class="btn-icon" onclick="setTimer(50)">50m</button>
+                </div>
+            </div>
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:20px;">
+                <h4 style="text-align:center; font-size:0.9rem; color:var(--text-muted); margin-bottom:10px;">LAST 7 DAYS (MINUTES)</h4>
+                <div class="chart-wrap" id="analyticsChart"></div>
+                <p style="text-align:center; font-weight:700; margin-top:15px; color:var(--primary);" id="todayTotal">Today: 0 mins</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="examModal">
+    <div class="modal-content">
+        <h3 style="margin-bottom:15px;">Add Target Exam</h3>
+        <input type="text" id="newExamName" placeholder="Exam Name" style="margin-bottom:10px;">
+        <input type="date" id="newExamDate" style="margin-bottom:20px;">
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn-outline" onclick="closeModals()">Cancel</button>
+            <button class="btn-primary" onclick="saveNewExam()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="settingsModal">
+    <div class="modal-content">
+        <h3 style="margin-bottom:15px;">System Backup</h3>
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:20px;">Securely download or restore your entire PrepFlow workspace data.</p>
+        <button class="btn-primary" style="width:100%; margin-bottom:10px;" onclick="exportWorkspace()"><i class="fa-solid fa-download"></i> Download Backup</button>
+        <label for="importFile" class="btn-outline" style="display:flex; width:100%; justify-content:center; cursor:pointer;"><i class="fa-solid fa-upload"></i> Restore Backup</label>
+        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importWorkspace(event)">
+        <div style="display:flex; justify-content:flex-end; margin-top:20px;"><button class="btn-icon" onclick="closeModals()">Close</button></div>
+    </div>
+</div>
+
+<script>
+    /* --- THEME & UTILS --- */
+    const htmlEl = document.documentElement, themeIcon = document.getElementById('themeIcon');
+    if (localStorage.getItem('theme') === 'dark') themeIcon.classList.replace('fa-moon', 'fa-sun');
+    function toggleTheme() {
+        if (htmlEl.getAttribute('data-theme') === 'dark') { htmlEl.removeAttribute('data-theme'); localStorage.setItem('theme', 'light'); themeIcon.classList.replace('fa-sun', 'fa-moon'); } 
+        else { htmlEl.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); themeIcon.classList.replace('fa-moon', 'fa-sun'); }
+    }
+    
+    function updateStreak() {
+        const today = new Date().toDateString(); let lastLogin = localStorage.getItem('lastLogin'); let streak = parseInt(localStorage.getItem('dailyStreak')) || 0;
+        if (lastLogin !== today) { let y = new Date(); y.setDate(y.getDate()-1); if(lastLogin === y.toDateString()) streak++; else streak = 1; localStorage.setItem('dailyStreak', streak); localStorage.setItem('lastLogin', today); }
+        document.querySelector('#streakBadge span').textContent = `${streak} Day Streak`;
+    } updateStreak();
+
+    function openTab(id) { document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active')); document.getElementById(id).classList.add('active'); event.currentTarget.classList.add('active'); }
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('active')); }
+
+    function eraseAll(type) {
+        if(!confirm("Erase all data in this section? This cannot be undone.")) return;
+        if(type==='notes') { notesData=[]; saveNotes(); renderNotes(); }
+        if(type==='kanban') { kanbanData=[]; localStorage.removeItem('kanbanData'); renderKanban(); }
+        if(type==='study') { studyData=[]; localStorage.removeItem('studyTableData'); renderTable(); }
+        if(type==='todo') { todoData=[]; localStorage.removeItem('todoList'); renderTodos(); }
+        if(type==='flashcards') { flashcards=[]; currentFC=0; localStorage.removeItem('flashcards'); renderFlashcards(); }
+        if(type==='analytics') { studySessions=[]; localStorage.removeItem('studySessions'); renderChart(); }
+    }
+
+    /* --- EXAMS SLIDER --- */
+    let exams = JSON.parse(localStorage.getItem('exams')) || [];
+    function renderExams() {
+        const cont = document.getElementById('examContainer'); cont.innerHTML = '';
+        exams.forEach((ex, i) => {
+            const diff = Math.ceil((new Date(ex.date) - new Date()) / (1000 * 60 * 60 * 24));
+            cont.innerHTML += `<div class="exam-card"><button class="del-exam" onclick="deleteExam(${i})"><i class="fa-solid fa-xmark"></i></button><h4>${ex.name}</h4><div class="days">${diff>0?diff:0}</div><span style="font-size:0.75rem;">${diff>0?'DAYS LEFT':'PASSED'}</span></div>`;
+        });
+        cont.innerHTML += `<button class="exam-add-btn" onclick="openModal('examModal')"><i class="fa-solid fa-plus" style="margin-right:8px;"></i> Add Exam</button>`;
+    }
+    function saveNewExam() { let n = document.getElementById('newExamName').value, d = document.getElementById('newExamDate').value; if(n && d) { exams.push({name:n, date:d}); localStorage.setItem('exams', JSON.stringify(exams)); renderExams(); closeModals(); document.getElementById('newExamName').value=''; } }
+    function deleteExam(i) { exams.splice(i,1); localStorage.setItem('exams', JSON.stringify(exams)); renderExams(); }
+    renderExams();
+
+    /* --- TAB 1: MULTIPLE SCRATCHPADS --- */
+    // Handle migration from old single string note
+    let oldNote = localStorage.getItem('generalNotes');
+    let notesData = [];
+    try { notesData = JSON.parse(oldNote); if(!Array.isArray(notesData)) throw new Error(); } 
+    catch { notesData = oldNote ? [{ id: Date.now(), title: "Quick Note", content: oldNote }] : [{ id: Date.now(), title: "Scratchpad 1", content: "" }]; }
+    
+    function saveNotes() { localStorage.setItem('generalNotes', JSON.stringify(notesData)); }
+    
+    function renderNotes() {
+        const grid = document.getElementById('scratchpadGrid'); grid.innerHTML = '';
+        notesData.forEach((note, i) => {
+            grid.innerHTML += `
+            <div class="scratchpad-card">
+                <input type="text" class="sp-title" value="${note.title}" onchange="updateNote(${i}, 'title', this.value)" placeholder="Note Title">
+                <textarea class="sp-content" onchange="updateNote(${i}, 'content', this.value)" placeholder="Start typing...">${note.content}</textarea>
+                <div class="sp-footer">
+                    <button class="btn-icon" onclick="copyNote(${i})" title="Copy Content"><i class="fa-regular fa-copy"></i></button>
+                    <button class="btn-icon" style="color:var(--danger);" onclick="deleteNote(${i})" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>`;
+        });
+    }
+    function addScratchpad() { notesData.push({ id: Date.now(), title: `Note ${notesData.length+1}`, content: "" }); saveNotes(); renderNotes(); }
+    function updateNote(index, field, value) { notesData[index][field] = value; saveNotes(); }
+    function deleteNote(index) { notesData.splice(index, 1); saveNotes(); renderNotes(); }
+    function copyNote(index) { navigator.clipboard.writeText(notesData[index].content); alert("Copied to clipboard!"); }
+    
+    function exportNotesTXT() {
+        let txt = notesData.map(n => `--- ${n.title} ---\n${n.content}\n\n`).join('');
+        const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([txt], {type:"text/plain"})); a.download="PrepFlow_Notes.txt"; a.click();
+    }
+    function exportNotesPDF() {
+        const container = document.getElementById('pdfExportContainer'); container.innerHTML = '<h1>PrepFlow Notes</h1><hr>';
+        notesData.forEach(n => { container.innerHTML += `<h2>${n.title}</h2><p style="white-space:pre-wrap;">${n.content}</p><br><hr><br>`; });
+        container.style.display = 'block';
+        html2pdf().from(container).set({ margin: 15, filename: 'PrepFlow_Notes.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).save().then(() => { container.style.display = 'none'; });
+    }
+    renderNotes();
+
+    /* --- TAB 2: SYLLABUS KANBAN BOARD --- */
+    let kanbanData = JSON.parse(localStorage.getItem('kanbanData')) || [];
+    function renderKanban() {
+        document.getElementById('col-todo').innerHTML = ''; document.getElementById('col-doing').innerHTML = ''; document.getElementById('col-done').innerHTML = '';
+        let cTodo=0, cDoing=0, cDone=0;
+        kanbanData.forEach((item, i) => {
+            const card = `<div class="kanban-card" draggable="true" ondragstart="drag(event, ${i})">
+                <button class="kb-del" onclick="deleteKanban(${i})"><i class="fa-solid fa-xmark"></i></button>
+                ${item.subject ? `<span class="kb-tag">${item.subject}</span>` : ''}
+                <p style="font-weight:500; font-size:0.95rem;">${item.topic}</p>
+            </div>`;
+            document.getElementById(`col-${item.status}`).innerHTML += card;
+            if(item.status==='todo') cTodo++; if(item.status==='doing') cDoing++; if(item.status==='done') cDone++;
+        });
+        document.getElementById('kb-todo-count').textContent = cTodo; document.getElementById('kb-doing-count').textContent = cDoing; document.getElementById('kb-done-count').textContent = cDone;
+    }
+    function addKanbanItem() {
+        const t = document.getElementById('kbTopic').value.trim(), s = document.getElementById('kbSubject').value.trim();
+        if(t) { kanbanData.push({ id: Date.now(), topic: t, subject: s, status: 'todo' }); localStorage.setItem('kanbanData', JSON.stringify(kanbanData)); document.getElementById('kbTopic').value=''; document.getElementById('kbSubject').value=''; renderKanban(); }
+    }
+    function deleteKanban(i) { kanbanData.splice(i,1); localStorage.setItem('kanbanData', JSON.stringify(kanbanData)); renderKanban(); }
+    function drag(ev, index) { ev.dataTransfer.setData("index", index); }
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drop(ev, status) {
+        ev.preventDefault(); const i = ev.dataTransfer.getData("index");
+        if(kanbanData[i]) { kanbanData[i].status = status; localStorage.setItem('kanbanData', JSON.stringify(kanbanData)); renderKanban(); }
+    }
+    renderKanban();
+
+    /* --- TAB 3: STUDY MANAGER --- */
+    let studyData = JSON.parse(localStorage.getItem('studyTableData')) || [];
+    function renderTable(filter="All") {
+        const tbody = document.getElementById('studyTableBody'); tbody.innerHTML=''; const subs = new Set();
+        studyData.forEach((r,i) => { subs.add(r.subject); if(filter==="All"||r.subject===filter) {
+            tbody.innerHTML += `<tr><td><span style="background:var(--bg-color); padding:4px 8px; border-radius:4px; font-size:0.85rem; font-weight:600;">${r.subject}</span></td><td style="font-weight:500;">${r.topic}</td><td>${r.desc}</td>
+                <td>${r.link?`<a href="${r.link}" target="_blank" style="color:var(--primary);"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>`:'-'}</td>
+                <td><button class="btn-icon" onclick="deleteStudyRow(${i})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+        }});
+        const sel = document.getElementById('subjectFilter'); sel.innerHTML='<option value="All">All Subjects</option>';
+        subs.forEach(s => { const opt=document.createElement('option'); opt.value=opt.textContent=s; if(s===filter) opt.selected=true; sel.appendChild(opt); });
+    }
+    document.getElementById('studyForm').addEventListener('submit', e => { e.preventDefault(); studyData.push({ subject:document.getElementById('subjInput').value.trim(), topic:document.getElementById('topicInput').value.trim(), desc:document.getElementById('descInput').value.trim(), link:document.getElementById('linkInput').value.trim() }); localStorage.setItem('studyTableData', JSON.stringify(studyData)); e.target.reset(); renderTable(); });
+    function deleteStudyRow(i) { studyData.splice(i,1); localStorage.setItem('studyTableData', JSON.stringify(studyData)); renderTable(); }
+    function exportCSV() { let csv = "Subject,Topic,Description,Link\n"+studyData.map(r=>`"${r.subject}","${r.topic}","${r.desc}","${r.link}"`).join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download="PrepFlow_Resources.csv"; a.click(); }
+    renderTable();
+
+    /* --- TAB 4: TASKS --- */
+    let todoData = JSON.parse(localStorage.getItem('todoList')) || [];
+    function renderTodos() {
+        todoData.sort((a,b)=>{ if(a.completed!==b.completed) return a.completed?1:-1; if(a.priority!==b.priority) return a.priority?-1:1; return 0; });
+        const list=document.getElementById('todoList'); list.innerHTML=''; let comp=0;
+        todoData.forEach((t,i) => {
+            if(t.completed) comp++;
+            list.innerHTML += `<div class="todo-item ${t.completed?'completed':''} ${t.priority?'priority':''}">
+                <div style="display:flex;align-items:center;gap:12px;cursor:pointer;" onclick="toggleTodo(${i})">
+                    <i class="fa-solid ${t.completed?'fa-circle-check':'fa-circle'}" style="color:${t.completed?'var(--success)':'var(--border)'}; font-size:1.3rem;"></i>
+                    <span style="font-weight:500;">${t.text}</span>
+                </div>
+                <div style="display:flex;gap:5px;">
+                    <button class="btn-icon" style="color:${t.priority?'var(--warning)':'inherit'}" onclick="togglePriority(${i})"><i class="fa-solid fa-star"></i></button>
+                    <button class="btn-icon" onclick="deleteTodo(${i})"><i class="fa-solid fa-xmark"></i></button>
+                </div></div>`;
+        });
+        document.getElementById('todoProgress').style.width = todoData.length ? `${(comp/todoData.length)*100}%` : '0%';
+    }
+    function addTodo() { const txt = document.getElementById('todoInput').value.trim(); if(!txt) return; todoData.push({text:txt, completed:false, priority:false}); localStorage.setItem('todoList', JSON.stringify(todoData)); document.getElementById('todoInput').value=''; renderTodos(); }
+    document.getElementById('todoInput').addEventListener('keypress', e => { if(e.key==='Enter') addTodo(); });
+    function toggleTodo(i) { todoData[i].completed = !todoData[i].completed; localStorage.setItem('todoList', JSON.stringify(todoData)); renderTodos(); }
+    function togglePriority(i) { todoData[i].priority = !todoData[i].priority; localStorage.setItem('todoList', JSON.stringify(todoData)); renderTodos(); }
+    function deleteTodo(i) { todoData.splice(i,1); localStorage.setItem('todoList', JSON.stringify(todoData)); renderTodos(); }
+    renderTodos();
+
+    /* --- TAB 5: FLASHCARDS --- */
+    let flashcards = JSON.parse(localStorage.getItem('flashcards')) || []; let currentFC = 0;
+    function renderFlashcards() {
+        if(!flashcards.length) { document.getElementById('fcDisplayArea').style.display='none'; document.getElementById('fcEmpty').style.display='block'; return; }
+        document.getElementById('fcDisplayArea').style.display='block'; document.getElementById('fcEmpty').style.display='none';
+        document.getElementById('activeFlashcard').classList.remove('flipped');
+        setTimeout(() => { document.getElementById('fcFrontText').textContent = flashcards[currentFC].q; document.getElementById('fcBackText').textContent = flashcards[currentFC].a; document.getElementById('fcCounter').textContent = `${currentFC+1} / ${flashcards.length}`; }, 150);
+    }
+    function addFlashcard() { const q=document.getElementById('fcQuestion').value, a=document.getElementById('fcAnswer').value; if(q&&a) { flashcards.push({q,a}); localStorage.setItem('flashcards',JSON.stringify(flashcards)); currentFC=flashcards.length-1; document.getElementById('fcQuestion').value=''; document.getElementById('fcAnswer').value=''; renderFlashcards(); } }
+    function flipCard() { document.getElementById('activeFlashcard').classList.toggle('flipped'); }
+    function prevCard() { if(currentFC>0) { currentFC--; renderFlashcards(); } }
+    function nextCard() { if(currentFC<flashcards.length-1) { currentFC++; renderFlashcards(); } }
+    renderFlashcards();
+
+    /* --- TAB 6: TIMER & ANALYTICS --- */
+    let timerInt, timeRem = 25*60, initTime = 25*60, isRun = false;
+    let studySessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+    function updateTimeDisp() { document.getElementById('timeDisplay').textContent = `${Math.floor(timeRem/60).toString().padStart(2,'0')}:${(timeRem%60).toString().padStart(2,'0')}`; }
+    function toggleTimer() {
+        const btn = document.getElementById('startBtn');
+        if(isRun) { clearInterval(timerInt); btn.textContent = 'Resume'; isRun = false; }
+        else {
+            if(timeRem<=0) return; btn.textContent = 'Pause'; isRun = true;
+            timerInt = setInterval(() => { timeRem--; updateTimeDisp(); if(timeRem<=0) { clearInterval(timerInt); isRun=false; btn.textContent='Start'; logSession(Math.floor(initTime/60)); alert("Session Complete!"); } }, 1000);
+        }
+    }
+    function setTimer(m) { clearInterval(timerInt); isRun=false; document.getElementById('startBtn').textContent='Start'; initTime = m*60; timeRem = initTime; updateTimeDisp(); }
+    function stopAndLog() { if(initTime - timeRem >= 60) { logSession(Math.floor((initTime - timeRem)/60)); alert("Time logged."); } setTimer(initTime/60); }
+    function logSession(mins) { if(mins<=0) return; const t = new Date().toISOString().split('T')[0]; let e = studySessions.find(s=>s.date===t); if(e) e.min+=mins; else studySessions.push({date:t, min:mins}); localStorage.setItem('studySessions', JSON.stringify(studySessions)); renderChart(); }
+    function renderChart() {
+        const wrap = document.getElementById('analyticsChart'); wrap.innerHTML=''; const days = []; let maxM = 1;
+        for(let i=6; i>=0; i--) { let d=new Date(); d.setDate(d.getDate()-i); const ds=d.toISOString().split('T')[0]; const s=studySessions.find(x=>x.date===ds); const m=s?s.min:0; if(m>maxM) maxM=m; days.push({name:d.toLocaleDateString('en-US',{weekday:'short'}), min:m, isToday:i===0}); }
+        days.forEach(d => { wrap.innerHTML += `<div class="bar-col"><div class="bar-fill" style="height:${Math.max((d.min/maxM)*100, 2)}%; ${d.isToday?'background:var(--success)':''}" title="${d.min} mins"></div><span style="font-size:0.7rem; margin-top:5px; color:var(--text-muted);">${d.name}</span></div>`; if(d.isToday) document.getElementById('todayTotal').textContent = `Today: ${d.min} mins`; });
+    }
+    updateTimeDisp(); renderChart();
+
+    /* --- BACKUP --- */
+    function exportWorkspace() {
+        const data = { generalNotes:localStorage.getItem('generalNotes'), kanbanData:localStorage.getItem('kanbanData'), studyTableData:localStorage.getItem('studyTableData'), todoList:localStorage.getItem('todoList'), exams:localStorage.getItem('exams'), flashcards:localStorage.getItem('flashcards'), studySessions:localStorage.getItem('studySessions'), theme:localStorage.getItem('theme'), dailyStreak:localStorage.getItem('dailyStreak') };
+        const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"})); a.download="PrepFlow_Backup.json"; a.click(); closeModals();
+    }
+    function importWorkspace(event) {
+        const file = event.target.files[0]; if(!file) return; const reader = new FileReader();
+        reader.onload = e => { try { const data = JSON.parse(e.target.result); Object.keys(data).forEach(k => { if(data[k]) localStorage.setItem(k,data[k]); }); alert("Restored!"); location.reload(); } catch { alert("Invalid file."); } }; reader.readAsText(file);
+    }
+</script>
+</body>
+</html>
