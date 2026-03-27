@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards | PrepFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 3D Flashcard Specific CSS */
+        .fc-container { perspective: 1000px; width: 100%; max-width: 500px; height: 300px; margin: 0 auto 30px; }
+        .fc-card { width: 100%; height: 100%; position: relative; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; cursor: pointer; }
+        .fc-card.flipped { transform: rotateY(180deg); }
+        .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; border-radius: var(--radius-lg); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-md); text-align: center; font-size: 1.4rem; font-weight: 600; }
+        .fc-back { background: var(--text-main); color: var(--bg-color); transform: rotateY(180deg); }
+        [data-theme="dark"] .fc-back { background: var(--primary); color: white; }
+        .fc-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; position: absolute; top: 20px; color: var(--text-muted); }
+        .fc-back .fc-label { color: rgba(255, 255, 255, 0.6); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Topbar (Optional, using global app.js logic) -->
+    <div class="top-bar">
+        <div class="streak-badge" id="streakBadge"><i class="fa-solid fa-fire"></i> <span></span></div>
+        <div class="top-controls">
+            <button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
+        </div>
+    </div>
+
+    <header>
+        <h1>Prep<span class="highlight">Flow</span></h1>
+        <p>Active Recall Memory Decks</p>
+    </header>
+
+    <!-- Global Exams Slider -->
+    <div class="exam-container" id="examContainer"></div>
+
+    <div class="tabs">
+        <a href="index.html" class="tab-btn"><i class="fa-solid fa-pen-nib"></i> Scratchpads</a>
+        <a href="kanban.html" class="tab-btn"><i class="fa-solid fa-map"></i> Syllabus</a>
+        <a href="resources.html" class="tab-btn"><i class="fa-solid fa-table"></i> Resources</a>
+        <a href="tasks.html" class="tab-btn"><i class="fa-solid fa-list-check"></i> Tasks</a>
+        <a href="flashcards.html" class="tab-btn active"><i class="fa-solid fa-clone"></i> Flashcards</a>
+        <a href="focus.html" class="tab-btn"><i class="fa-solid fa-chart-pie"></i> Focus</a>
+    </div>
+
+    <div class="page-content">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-brain"></i> Flashcards</h3>
+            <button class="btn-danger" onclick="eraseAll()"><i class="fa-solid fa-trash"></i> Erase Deck</button>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-bottom: 30px;">
+            <input type="text" id="fcQuestion" placeholder="Question (Front)">
+            <input type="text" id="fcAnswer" placeholder="Answer (Back)">
+            <button class="btn-primary" onclick="addFlashcard()">Add Card</button>
+        </div>
+        
+        <div id="fcDisplayArea" style="display: none;">
+            <div class="fc-container" onclick="flipCard()">
+                <div class="fc-card" id="activeFlashcard">
+                    <div class="fc-face fc-front">
+                        <span class="fc-label">Question</span>
+                        <p id="fcFrontText"></p>
+                    </div>
+                    <div class="fc-face fc-back">
+                        <span class="fc-label">Answer</span>
+                        <p id="fcBackText"></p>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex; justify-content:center; align-items:center; gap:25px;">
+                <button class="icon-btn" onclick="prevCard()"><i class="fa-solid fa-arrow-left"></i></button>
+                <span id="fcCounter" style="font-weight:700; color:var(--text-muted); font-size:1.1rem;">1 / 1</span>
+                <button class="icon-btn" onclick="nextCard()"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <div id="fcEmpty" style="text-align:center; padding: 50px; color:var(--text-muted);">
+            <i class="fa-solid fa-layer-group" style="font-size:3rem; margin-bottom:15px; opacity:0.5;"></i>
+            <p>Your deck is empty. Add a card above to start!</p>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    let flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
+    let currentFC = 0;
+
+    function renderFlashcards() {
+        if(!flashcards.length) { 
+            document.getElementById('fcDisplayArea').style.display = 'none'; 
+            document.getElementById('fcEmpty').style.display = 'block'; 
+            return; 
+        }
+        document.getElementById('fcDisplayArea').style.display = 'block'; 
+        document.getElementById('fcEmpty').style.display = 'none';
+        document.getElementById('activeFlashcard').classList.remove('flipped');
+        
+        setTimeout(() => { 
+            document.getElementById('fcFrontText').textContent = flashcards[currentFC].q; 
+            document.getElementById('fcBackText').textContent = flashcards[currentFC].a; 
+            document.getElementById('fcCounter').textContent = `${currentFC + 1} / ${flashcards.length}`; 
+        }, 150);
+    }
+
+    function addFlashcard() { 
+        const q = document.getElementById('fcQuestion').value.trim();
+        const a = document.getElementById('fcAnswer').value.trim();
+        if(q && a) { 
+            flashcards.push({q, a}); 
+            localStorage.setItem('flashcards', JSON.stringify(flashcards)); 
+            currentFC = flashcards.length - 1; 
+            document.getElementById('fcQuestion').value = ''; 
+            document.getElementById('fcAnswer').value = ''; 
+            renderFlashcards(); 
+        } 
+    }
+
+    function flipCard() { document.getElementById('activeFlashcard').classList.toggle('flipped'); }
+    function prevCard() { if(currentFC > 0) { currentFC--; renderFlashcards(); } }
+    function nextCard() { if(currentFC < flashcards.length - 1) { currentFC++; renderFlashcards(); } }
+    
+    function eraseAll() { 
+        if(confirm("Are you sure you want to delete all flashcards?")) { 
+            flashcards = []; 
+            currentFC = 0; 
+            localStorage.removeItem('flashcards'); 
+            renderFlashcards(); 
+        } 
+    }
+
+    renderFlashcards();
+</script>
+</body>
+</html>

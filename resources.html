@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>Resources | PrepFlow</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="style.css"></head><body>
+<div class="container">
+    <header><h1>Prep<span class="highlight">Flow</span></h1></header>
+    <div class="tabs">
+        <a href="index.html" class="tab-btn"><i class="fa-solid fa-pen-nib"></i> Scratchpads</a>
+        <a href="kanban.html" class="tab-btn"><i class="fa-solid fa-map"></i> Syllabus</a>
+        <a href="resources.html" class="tab-btn active"><i class="fa-solid fa-table"></i> Resources</a>
+        <a href="tasks.html" class="tab-btn"><i class="fa-solid fa-list-check"></i> Tasks</a>
+        <a href="flashcards.html" class="tab-btn"><i class="fa-solid fa-clone"></i> Flashcards</a>
+        <a href="focus.html" class="tab-btn"><i class="fa-solid fa-chart-pie"></i> Focus</a>
+    </div>
+
+    <div class="page-content">
+        <div class="section-header"><h3>Resources</h3> <div><button class="btn-outline" onclick="exportCSV()">CSV</button> <button class="btn-danger" onclick="eraseAll()">Erase</button></div></div>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="rSub" placeholder="Subject"> <input type="text" id="rTop" placeholder="Topic"> <input type="text" id="rDesc" placeholder="Desc"> <input type="url" id="rLink" placeholder="URL"> <button class="btn-primary" onclick="addRes()">Add</button>
+        </div>
+        <table style="width:100%; text-align:left; border-collapse:collapse;">
+            <thead><tr style="border-bottom:1px solid var(--border);"><th>Subject</th><th>Topic</th><th>Desc</th><th>Link</th><th>Act</th></tr></thead>
+            <tbody id="rBody"></tbody>
+        </table>
+    </div>
+</div>
+<script src="app.js"></script>
+<script>
+    let res = JSON.parse(localStorage.getItem('studyTableData')) || [];
+    function renderRes() {
+        const body = document.getElementById('rBody'); body.innerHTML='';
+        res.forEach((r,i) => { body.innerHTML += `<tr style="border-bottom:1px solid var(--border); height:50px;"><td>${r.subject}</td><td>${r.topic}</td><td>${r.desc}</td><td>${r.link?`<a href="${r.link}" target="_blank" style="color:var(--primary);">Link</a>`:'-'}</td><td><button onclick="delRes(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer;"><i class="fa-solid fa-trash"></i></button></td></tr>`; });
+    }
+    function addRes() { const s=document.getElementById('rSub').value, t=document.getElementById('rTop').value, d=document.getElementById('rDesc').value, l=document.getElementById('rLink').value; if(s&&t) { res.push({subject:s, topic:t, desc:d, link:l}); localStorage.setItem('studyTableData', JSON.stringify(res)); renderRes(); } }
+    function delRes(i) { res.splice(i,1); localStorage.setItem('studyTableData', JSON.stringify(res)); renderRes(); }
+    function eraseAll() { if(confirm("Erase all?")){ res=[]; localStorage.removeItem('studyTableData'); renderRes(); } }
+    function exportCSV() { let csv="Subject,Topic,Description,Link\n"+res.map(r=>`"${r.subject}","${r.topic}","${r.desc}","${r.link}"`).join("\n"); const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'})); a.download="Resources.csv"; a.click(); }
+    renderRes();
+</script>
+</body></html>

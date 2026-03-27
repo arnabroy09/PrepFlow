@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus | PrepFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* Focus Timer & Analytics CSS */
+        .timer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .timer-display { font-size: 6rem; font-weight: 800; color: var(--text-main); font-variant-numeric: tabular-nums; margin-bottom: 20px; line-height: 1; text-shadow: var(--shadow-sm); }
+        .chart-wrap { display: flex; align-items: flex-end; justify-content: space-between; height: 200px; padding-top: 20px; border-bottom: 2px solid var(--border); gap: 8px; margin-bottom: 15px; }
+        .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; }
+        .bar-fill { width: 100%; max-width: 35px; background: var(--primary); border-radius: 6px 6px 0 0; transition: height 1s ease; cursor: pointer; }
+        .bar-fill:hover { filter: brightness(1.2); box-shadow: var(--shadow-glow); }
+        .bar-tooltip { position: absolute; top: -30px; background: var(--text-main); color: var(--bg-color); font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; opacity: 0; transition: 0.2s; white-space: nowrap; pointer-events: none; font-weight: 600; }
+        .bar-fill:hover + .bar-tooltip { opacity: 1; top: -35px; }
+        @media (max-width: 768px) { .timer-grid { grid-template-columns: 1fr; } .timer-display { font-size: 5rem; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <div class="streak-badge" id="streakBadge"><i class="fa-solid fa-fire"></i> <span></span></div>
+        <div class="top-controls">
+            <button class="icon-btn" onclick="toggleTheme()"><i class="fa-solid fa-moon" id="themeIcon"></i></button>
+        </div>
+    </div>
+
+    <header>
+        <h1>Prep<span class="highlight">Flow</span></h1>
+        <p>Pomodoro Timer & Daily Analytics</p>
+    </header>
+
+    <div class="exam-container" id="examContainer"></div>
+
+    <div class="tabs">
+        <a href="index.html" class="tab-btn"><i class="fa-solid fa-pen-nib"></i> Scratchpads</a>
+        <a href="kanban.html" class="tab-btn"><i class="fa-solid fa-map"></i> Syllabus</a>
+        <a href="resources.html" class="tab-btn"><i class="fa-solid fa-table"></i> Resources</a>
+        <a href="tasks.html" class="tab-btn"><i class="fa-solid fa-list-check"></i> Tasks</a>
+        <a href="flashcards.html" class="tab-btn"><i class="fa-solid fa-clone"></i> Flashcards</a>
+        <a href="focus.html" class="tab-btn active"><i class="fa-solid fa-chart-pie"></i> Focus</a>
+    </div>
+
+    <div class="page-content">
+        <div class="section-header">
+            <h3><i class="fa-solid fa-stopwatch"></i> Focus Center</h3>
+            <button class="btn-danger" onclick="eraseAll()"><i class="fa-solid fa-trash"></i> Reset Data</button>
+        </div>
+        
+        <div class="timer-grid">
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:40px 20px; text-align:center;">
+                <div class="timer-display" id="timeDisplay">25:00</div>
+                <div style="display:flex; justify-content:center; gap:15px; margin-bottom:30px;">
+                    <button class="btn-primary" id="startBtn" onclick="toggleTimer()" style="font-size:1.1rem; padding: 12px 30px;"><i class="fa-solid fa-play"></i> Start</button>
+                    <button class="btn-outline" onclick="stopAndLog()"><i class="fa-solid fa-stop"></i> Log Output</button>
+                </div>
+                <div style="display:flex; justify-content:center; gap:10px;">
+                    <button class="btn-outline" style="border-radius:30px;" onclick="setTimer(15)">15 min</button>
+                    <button class="btn-outline" style="border-radius:30px;" onclick="setTimer(25)">25 min</button>
+                    <button class="btn-outline" style="border-radius:30px;" onclick="setTimer(50)">50 min</button>
+                </div>
+            </div>
+            
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:30px;">
+                <h4 style="text-align:center; color:var(--text-muted); font-size:0.85rem; letter-spacing:1px; text-transform:uppercase;">Last 7 Days (Minutes)</h4>
+                <div class="chart-wrap" id="analyticsChart">
+                    <!-- Bars injected via JS -->
+                </div>
+                <p style="text-align:center; font-weight:800; font-size:1.2rem; color:var(--primary); margin-top:10px;" id="todayTotal">Today: 0 mins</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    let timerInt, timeRem = 25 * 60, initTime = 25 * 60, isRun = false;
+    let studySessions = JSON.parse(localStorage.getItem('studySessions')) || [];
+    
+    function updateTimeDisp() { 
+        document.getElementById('timeDisplay').textContent = `${Math.floor(timeRem/60).toString().padStart(2,'0')}:${(timeRem%60).toString().padStart(2,'0')}`; 
+    }
+    
+    function toggleTimer() {
+        const btn = document.getElementById('startBtn');
+        if(isRun) { 
+            clearInterval(timerInt); 
+            btn.innerHTML = '<i class="fa-solid fa-play"></i> Resume'; 
+            isRun = false; 
+        } else {
+            if(timeRem <= 0) return; 
+            btn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause'; 
+            isRun = true;
+            timerInt = setInterval(() => { 
+                timeRem--; 
+                updateTimeDisp(); 
+                if(timeRem <= 0) { 
+                    clearInterval(timerInt); 
+                    isRun = false; 
+                    btn.innerHTML = '<i class="fa-solid fa-play"></i> Start'; 
+                    logSession(Math.floor(initTime/60)); 
+                    alert("Focus Session Complete! Data logged."); 
+                } 
+            }, 1000);
+        }
+    }
+
+    function setTimer(m) { 
+        clearInterval(timerInt); 
+        isRun = false; 
+        document.getElementById('startBtn').innerHTML = '<i class="fa-solid fa-play"></i> Start'; 
+        initTime = m * 60; 
+        timeRem = initTime; 
+        updateTimeDisp(); 
+    }
+
+    function stopAndLog() { 
+        if(initTime - timeRem >= 60) { // Log if at least 1 min studied
+            let mins = Math.floor((initTime - timeRem) / 60);
+            logSession(mins); 
+            alert(`Logged ${mins} minutes!`); 
+        } 
+        setTimer(initTime / 60); 
+    }
+
+    function logSession(mins) { 
+        if(mins <= 0) return; 
+        const today = new Date().toISOString().split('T')[0]; 
+        let existing = studySessions.find(s => s.date === today); 
+        if(existing) existing.min += mins; 
+        else studySessions.push({date: today, min: mins}); 
+        localStorage.setItem('studySessions', JSON.stringify(studySessions)); 
+        renderChart(); 
+    }
+
+    function renderChart() {
+        const wrap = document.getElementById('analyticsChart'); 
+        wrap.innerHTML = ''; 
+        const days = []; 
+        let maxM = 1;
+        
+        for(let i = 6; i >= 0; i--) { 
+            let d = new Date(); 
+            d.setDate(d.getDate() - i); 
+            const ds = d.toISOString().split('T')[0]; 
+            const session = studySessions.find(x => x.date === ds); 
+            const m = session ? session.min : 0; 
+            if(m > maxM) maxM = m; 
+            days.push({name: d.toLocaleDateString('en-US', {weekday: 'short'}), min: m, isToday: i === 0}); 
+        }
+        
+        days.forEach(d => { 
+            wrap.innerHTML += `
+            <div class="bar-col">
+                <div class="bar-fill" style="height:${Math.max((d.min / maxM) * 100, 2)}%; ${d.isToday ? 'background:var(--success)' : ''}"></div>
+                <span class="bar-tooltip">${d.min} mins</span>
+                <span style="font-size:0.75rem; font-weight:600; margin-top:8px; color:var(--text-muted);">${d.name}</span>
+            </div>`; 
+            if(d.isToday) document.getElementById('todayTotal').textContent = `Today: ${d.min} mins`; 
+        });
+    }
+
+    function eraseAll() {
+        if(confirm("Warning: This will permanently delete your entire focus history. Continue?")) {
+            studySessions = [];
+            localStorage.removeItem('studySessions');
+            resetTimer();
+            renderChart();
+        }
+    }
+    function resetTimer() { setTimer(25); } // Default reset
+
+    updateTimeDisp(); 
+    renderChart();
+</script>
+</body>
+</html>

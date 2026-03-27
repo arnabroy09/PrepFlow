@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>Tasks | PrepFlow</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"><link rel="stylesheet" href="style.css"></head><body>
+<div class="container">
+    <header><h1>Prep<span class="highlight">Flow</span></h1></header>
+    <div class="tabs">
+        <a href="index.html" class="tab-btn"><i class="fa-solid fa-pen-nib"></i> Scratchpads</a>
+        <a href="kanban.html" class="tab-btn"><i class="fa-solid fa-map"></i> Syllabus</a>
+        <a href="resources.html" class="tab-btn"><i class="fa-solid fa-table"></i> Resources</a>
+        <a href="tasks.html" class="tab-btn active"><i class="fa-solid fa-list-check"></i> Tasks</a>
+        <a href="flashcards.html" class="tab-btn"><i class="fa-solid fa-clone"></i> Flashcards</a>
+        <a href="focus.html" class="tab-btn"><i class="fa-solid fa-chart-pie"></i> Focus</a>
+    </div>
+    <div class="page-content">
+        <div class="section-header"><h3>Tasks</h3> <button class="btn-danger" onclick="eraseAll()">Erase</button></div>
+        <div style="display:flex; gap:10px; margin-bottom:20px;"><input type="text" id="tIn" placeholder="New task"> <button class="btn-primary" onclick="addT()">Add</button></div>
+        <div id="tList"></div>
+    </div>
+</div>
+<script src="app.js"></script>
+<script>
+    let tasks = JSON.parse(localStorage.getItem('todoList')) || [];
+    function renderT() {
+        tasks.sort((a,b)=>{ if(a.completed!==b.completed) return a.completed?1:-1; if(a.priority!==b.priority) return a.priority?-1:1; return 0; });
+        const list=document.getElementById('tList'); list.innerHTML='';
+        tasks.forEach((t,i) => {
+            list.innerHTML += `<div style="padding:15px; background:var(--surface); border:1px solid ${t.priority?'var(--warning)':'var(--border)'}; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; ${t.completed?'opacity:0.5':''}">
+                <div style="cursor:pointer;" onclick="togT(${i})"><i class="fa-solid ${t.completed?'fa-circle-check':'fa-circle'}" style="color:${t.completed?'var(--success)':'var(--text-muted)'};"></i> <span style="${t.completed?'text-decoration:line-through':''}">${t.text}</span></div>
+                <div><button onclick="togP(${i})" style="background:none; border:none; color:${t.priority?'var(--warning)':'var(--text-muted)'}; cursor:pointer;"><i class="fa-solid fa-star"></i></button> <button onclick="delT(${i})" style="background:none; border:none; color:var(--danger); cursor:pointer;"><i class="fa-solid fa-trash"></i></button></div>
+            </div>`;
+        });
+    }
+    function addT() { const v=document.getElementById('tIn').value; if(v){ tasks.push({text:v, completed:false, priority:false}); localStorage.setItem('todoList',JSON.stringify(tasks)); renderT(); } }
+    function togT(i) { tasks[i].completed = !tasks[i].completed; localStorage.setItem('todoList',JSON.stringify(tasks)); renderT(); }
+    function togP(i) { tasks[i].priority = !tasks[i].priority; localStorage.setItem('todoList',JSON.stringify(tasks)); renderT(); }
+    function delT(i) { tasks.splice(i,1); localStorage.setItem('todoList',JSON.stringify(tasks)); renderT(); }
+    function eraseAll() { if(confirm("Erase all?")){ tasks=[]; localStorage.removeItem('todoList'); renderT(); } }
+    renderT();
+</script>
+</body></html>

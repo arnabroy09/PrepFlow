@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Syllabus | PrepFlow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <!-- Paste Topbar and Header from index.html here -->
+    <header><h1>Prep<span class="highlight">Flow</span></h1></header>
+
+    <div class="tabs">
+        <a href="index.html" class="tab-btn"><i class="fa-solid fa-pen-nib"></i> Scratchpads</a>
+        <a href="kanban.html" class="tab-btn active"><i class="fa-solid fa-map"></i> Syllabus</a>
+        <a href="resources.html" class="tab-btn"><i class="fa-solid fa-table"></i> Resources</a>
+        <a href="tasks.html" class="tab-btn"><i class="fa-solid fa-list-check"></i> Tasks</a>
+        <a href="flashcards.html" class="tab-btn"><i class="fa-solid fa-clone"></i> Flashcards</a>
+        <a href="focus.html" class="tab-btn"><i class="fa-solid fa-chart-pie"></i> Focus</a>
+    </div>
+
+    <div class="page-content">
+        <div class="section-header"><h3>Syllabus Board</h3> <button class="btn-danger" onclick="eraseAll()">Erase Board</button></div>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="kbTopic" placeholder="Topic Name"> <input type="text" id="kbSubject" placeholder="Subject"> <button class="btn-primary" onclick="addKanbanItem()">Add</button>
+        </div>
+        
+        <div style="display:flex; gap:20px; overflow-x:auto;">
+            <div style="flex:1; min-width:280px; background:var(--surface); padding:15px; border-radius:8px;" ondrop="drop(event, 'todo')" ondragover="allowDrop(event)">
+                <h4 style="color:var(--danger); border-bottom:2px solid var(--danger); padding-bottom:10px; margin-bottom:10px;">To Study</h4>
+                <div id="col-todo" style="min-height:200px;"></div>
+            </div>
+            <div style="flex:1; min-width:280px; background:var(--surface); padding:15px; border-radius:8px;" ondrop="drop(event, 'doing')" ondragover="allowDrop(event)">
+                <h4 style="color:var(--warning); border-bottom:2px solid var(--warning); padding-bottom:10px; margin-bottom:10px;">Revising</h4>
+                <div id="col-doing" style="min-height:200px;"></div>
+            </div>
+            <div style="flex:1; min-width:280px; background:var(--surface); padding:15px; border-radius:8px;" ondrop="drop(event, 'done')" ondragover="allowDrop(event)">
+                <h4 style="color:var(--success); border-bottom:2px solid var(--success); padding-bottom:10px; margin-bottom:10px;">Mastered</h4>
+                <div id="col-done" style="min-height:200px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+    let kanbanData = JSON.parse(localStorage.getItem('kanbanData')) || [];
+    function renderKanban() {
+        document.getElementById('col-todo').innerHTML = ''; document.getElementById('col-doing').innerHTML = ''; document.getElementById('col-done').innerHTML = '';
+        kanbanData.forEach((item, i) => {
+            const card = `<div draggable="true" ondragstart="drag(event, ${i})" style="background:var(--bg-color); border:1px solid var(--border); padding:12px; margin-bottom:10px; border-radius:8px; cursor:grab;">
+                <button onclick="deleteKanban(${i})" style="float:right; background:none; color:var(--danger); border:none; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+                ${item.subject ? `<span style="font-size:0.7rem; background:var(--primary); color:white; padding:2px 6px; border-radius:4px;">${item.subject}</span><br>` : ''}
+                <strong>${item.topic}</strong>
+            </div>`;
+            document.getElementById(`col-${item.status}`).innerHTML += card;
+        });
+    }
+    function addKanbanItem() { const t=document.getElementById('kbTopic').value, s=document.getElementById('kbSubject').value; if(t) { kanbanData.push({ topic: t, subject: s, status: 'todo' }); localStorage.setItem('kanbanData', JSON.stringify(kanbanData)); renderKanban(); } }
+    function deleteKanban(i) { kanbanData.splice(i,1); localStorage.setItem('kanbanData', JSON.stringify(kanbanData)); renderKanban(); }
+    function drag(ev, index) { ev.dataTransfer.setData("index", index); }
+    function allowDrop(ev) { ev.preventDefault(); }
+    function drop(ev, status) { ev.preventDefault(); const i = ev.dataTransfer.getData("index"); if(kanbanData[i]) { kanbanData[i].status = status; localStorage.setItem('kanbanData', JSON.stringify(kanbanData)); renderKanban(); } }
+    function eraseAll() { if(confirm("Erase all?")) { kanbanData=[]; localStorage.removeItem('kanbanData'); renderKanban(); } }
+    renderKanban();
+</script>
+</body>
+</html>
